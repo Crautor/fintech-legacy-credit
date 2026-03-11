@@ -1,22 +1,22 @@
 package br.com.nogueiranogueira.aularefatoracao.controller;
 
-.com.nogueiranogueira.aularefatoracao.dto.TipoConta;
-
+import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
+import br.com.nogueiranogueira.aularefatoracao.dto.TipoConta;
 import br.com.nogueiranogueira.aularefatoracao.model.SolicitacaoCredito;
-
 import br.com.nogueiranogueira.aularefatoracao.service.AnaliseCreditoService;
 import br.com.nogueiranogueira.aularefatoracao.service.ProcessadorAnaliseCreditoService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Tag(name = "Solictações Controller", description = "Endpoints para análise e gerenciamento de solicitações de crédito")
@@ -26,14 +26,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SolicitacaoCreditoController {
 
-    // Agora usamos a injeção do serviço refatorado
     private final AnaliseCreditoService analiseCreditoService;
-
-    @Autowired
     private final ProcessadorAnaliseCreditoService processadorAnaliseCreditoService;
 
-
-    @Operation(summary = "Analisar solicitação de crédito", description = "Analisa uma solicitação de crédito com base nos parâmetros fornecidos e retorna o resultado da análise.")
+    @Operation(
+            summary = "Analisar solicitação de crédito",
+            description = "Analisa uma solicitação de crédito com base nos parâmetros fornecidos e retorna o resultado da análise."
+    )
     @PostMapping("/analisar")
     public ResponseEntity<Map<String, Object>> analisarSolicitacao(
             @RequestParam String cliente,
@@ -45,8 +44,11 @@ public class SolicitacaoCreditoController {
         log.info("Recebida requisição de análise para cliente: {}", cliente);
 
         try {
+
             TipoConta tipo = TipoConta.valueOf(tipoConta.toUpperCase());
-            SolicitacaoAnalise solicitacao = new SolicitacaoAnalise(cliente, valor, score, negativado, tipo);
+
+            SolicitacaoAnalise solicitacao =
+                    new SolicitacaoAnalise(cliente, valor, score, negativado, tipo);
 
             boolean aprovado = analiseCreditoService.analisarSolicitacao(solicitacao);
 
@@ -58,25 +60,35 @@ public class SolicitacaoCreditoController {
             response.put("mensagem", aprovado ? "Solicitação aprovada" : "Solicitação reprovada");
 
             return ResponseEntity.ok(response);
+
         } catch (IllegalArgumentException e) {
+
             log.error("Tipo de conta inválido", e);
+
             Map<String, Object> error = new HashMap<>();
             error.put("erro", "Tipo de conta inválido. Use PF ou PJ.");
+
             return ResponseEntity.badRequest().body(error);
+
         } catch (Exception e) {
+
             log.error("Erro ao analisar solicitação", e);
+
             Map<String, Object> error = new HashMap<>();
             error.put("erro", "Erro ao processar solicitação");
             error.put("mensagem", e.getMessage());
+
             return ResponseEntity.badRequest().body(error);
         }
     }
 
     @PostMapping("/processar-lote")
     public ResponseEntity<Map<String, String>> processarLote(@RequestBody List<String> clientes) {
+
         log.info("Recebida requisição para processar lote com {} clientes", clientes.size());
 
         try {
+
             List<SolicitacaoAnalise> lote = clientes.stream()
                     .map(c -> new SolicitacaoAnalise(c, 1000.0, 600, false, TipoConta.PF))
                     .collect(Collectors.toList());
@@ -88,38 +100,51 @@ public class SolicitacaoCreditoController {
             response.put("totalClientes", String.valueOf(clientes.size()));
 
             return ResponseEntity.ok(response);
+
         } catch (Exception e) {
+
             log.error("Erro ao processar lote", e);
+
             Map<String, String> error = new HashMap<>();
             error.put("erro", "Erro ao processar lote");
             error.put("mensagem", e.getMessage());
+
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<Map<String, String>> analiseCredito(
+            @RequestBody List<SolicitacaoCreditoRecord> solicitacaoCreditoRecords) {
+
+        try {
+
+            processadorAnaliseCreditoService.processarLote(solicitacaoCreditoRecords);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("mensagem", "Solicitações processadas com sucesso");
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+
+            log.error("Erro ao processar solicitações", e);
+
+            Map<String, String> error = new HashMap<>();
+            error.put("erro", "Erro ao processar solicitações");
+            error.put("mensagem", e.getMessage());
+
             return ResponseEntity.badRequest().body(error);
         }
     }
 
     @GetMapping("/saude")
     public ResponseEntity<Map<String, String>> saude() {
+
         Map<String, String> response = new HashMap<>();
         response.put("status", "ok");
         response.put("mensagem", "Aplicação funcionando corretamente");
+
         return ResponseEntity.ok(response);
-    }
-
-}
-
-    @PostMapping
-    public ResponseEntity<Map<String, String>> analiseCredito(@RequestBody List<SolicitacaoCreditoRecord> solicitacaoCreditoRecords) {
-        try {
-            processadorAnaliseCreditoService.processarLote(solicitacaoCreditoRecords);
-            Map<String, String> response = new HashMap<>();
-            response.put("mensagem", "Solicitações processadas com sucesso");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Erro ao processar solicitações", e);
-            Map<String, String> error = new HashMap<>();
-            error.put("erro", "Erro ao processar solicitações");
-            error.put("mensagem", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
     }
 }

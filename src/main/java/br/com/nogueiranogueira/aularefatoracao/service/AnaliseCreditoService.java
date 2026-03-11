@@ -64,4 +64,7 @@ public class AnaliseCreditoService {
 
         }
     }
+
+    public void analisarSolicitacao(String clienteAprovado, int i, int i1, boolean b, String pf) {
+    }
 }

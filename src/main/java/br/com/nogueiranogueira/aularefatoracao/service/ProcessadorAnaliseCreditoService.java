@@ -1,10 +1,7 @@
 package br.com.nogueiranogueira.aularefatoracao.service;
 
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
-import br.com.nogueiranogueira.aularefatoracao.factory.AnaliseCreditoFactory;
 import br.com.nogueiranogueira.aularefatoracao.strategy.AnaliseStrategy;
-import br.com.nogueiranogueira.aularefatoracao.strategy.AnaliseStrategyPF;
-import br.com.nogueiranogueira.aularefatoracao.strategy.AnaliseStrategyPJ;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
