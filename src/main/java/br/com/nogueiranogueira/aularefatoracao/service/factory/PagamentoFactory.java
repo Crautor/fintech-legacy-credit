@@ -1,7 +1,5 @@
 package br.com.nogueiranogueira.aularefatoracao.service.factory;
 
-import br.com.nogueiranogueira.aularefatoracao.strategy.*;
-
 public class PagamentoFactory {
     public static PagamentoStrategy obterEstrategia(String metodo) {
         if (metodo == null || metodo.trim().isEmpty()) {
