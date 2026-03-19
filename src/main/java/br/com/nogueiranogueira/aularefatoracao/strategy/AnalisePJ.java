@@ -2,12 +2,14 @@ package br.com.nogueiranogueira.aularefatoracao.strategy;
 
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
 import br.com.nogueiranogueira.aularefatoracao.dto.TipoConta;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-@Slf4j
 @Component
 public class AnalisePJ implements SolicitacaoStrategy {
+
+    private static final Logger log = LoggerFactory.getLogger(AnalisePJ.class);
 
     @Override
     public boolean Analisar(SolicitacaoAnalise solicitacao) {

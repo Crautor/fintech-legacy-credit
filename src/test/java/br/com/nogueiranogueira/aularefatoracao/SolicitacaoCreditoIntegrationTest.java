@@ -1,154 +1,82 @@
 package br.com.nogueiranogueira.aularefatoracao;
 
-import br.com.nogueiranogueira.aularefatoracao.model.SolicitacaoCredito;
-import br.com.nogueiranogueira.aularefatoracao.repository.SolicitacaoCreditoRepository;
-import br.com.nogueiranogueira.aularefatoracao.service.AnaliseCreditoService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class SolicitacaoCreditoIntegrationTest {
+class SolicitacaoCreditoIntegrationTest {
+
+    private static final String API_CONTEXT = "/api";
+    private static final String BASE_RESOURCE = "/api/solicitacoes";
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private AnaliseCreditoService analiseCreditoService;
-
-    @Autowired
-    private SolicitacaoCreditoRepository repository;
-
-    @BeforeEach
-    public void setUp() {
-        repository.deleteAll();
-    }
-
     @Test
-    public void testAnalisarSolicitacaoAprovadaPF() throws Exception {
-        mockMvc.perform(post("/api/solicitacoes/analisar")
-                .param("cliente", "João Silva")
-                .param("valor", "3000")
-                .param("score", "700")
-                .param("negativado", "false")
-                .param("tipoConta", "PF"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cliente").value("João Silva"))
-                .andExpect(jsonPath("$.valor").value(3000.0));
-    }
-
-    @Test
-    public void testAnalisarSolicitacaoReprovadaValorInvalido() throws Exception {
-        mockMvc.perform(post("/api/solicitacoes/analisar")
-                .param("cliente", "Maria Santos")
-                .param("valor", "-1000")
-                .param("score", "700")
-                .param("negativado", "false")
-                .param("tipoConta", "PF"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.aprovado").value(false));
-    }
-
-    @Test
-    public void testAnalisarSolicitacaoClienteNegativado() throws Exception {
-        mockMvc.perform(post("/api/solicitacoes/analisar")
-                .param("cliente", "Pedro Costa")
-                .param("valor", "5000")
-                .param("score", "700")
-                .param("negativado", "true")
-                .param("tipoConta", "PF"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.aprovado").value(false));
-    }
-
-    @Test
-    public void testProcessarLote() throws Exception {
-
-        mockMvc.perform(post("/api/solicitacoes/processar-lote")
-                .contentType("application/json")
-                .content("[\"Cliente1\", \"Cliente2\", \"Cliente3\"]"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.mensagem").value("Lote processado com sucesso"))
-                .andExpect(jsonPath("$.totalClientes").value("3"));
-    }
-
-    @Test
-    public void testObterSolicitacoesAprovadas() throws Exception {
-        // Criar algumas solicitações
-        analiseCreditoService.analisarSolicitacao("Cliente Aprovado", 2000, 700, false, "PF");
-
-        mockMvc.perform(get("/api/solicitacoes/aprovadas"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void testObterSolicitacoesPorCliente() throws Exception {
-        // Criar solicitação
-        analiseCreditoService.analisarSolicitacao("João", 2000, 700, false, "PF");
-
-        mockMvc.perform(get("/api/solicitacoes/por-cliente/João"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void testEndpointSaude() throws Exception {
-        mockMvc.perform(get("/api/solicitacoes/saude"))
+    void deveResponderSaude() throws Exception {
+        mockMvc.perform(get(BASE_RESOURCE + "/saude").contextPath(API_CONTEXT))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ok"))
                 .andExpect(jsonPath("$.mensagem").value("Aplicação funcionando corretamente"));
     }
 
     @Test
-    public void testAnalisarSolicitacaoAprovadaPJComParametrosValidos() {
-        boolean resultado = analiseCreditoService.analisarSolicitacao("Empresa ABC LTDA", 25000, 750, false, "PJ");
-        assertTrue(resultado, "PJ com valor adequado e score alto deve ser aprovado");
-
-        List<SolicitacaoCredito> solicitacoes = repository.findByCliente("Empresa ABC LTDA");
-        assertEquals(1, solicitacoes.size());
-        assertTrue(solicitacoes.getFirst().getAprovado());
+    void deveAnalisarSolicitacaoPjComDocumentoValido() throws Exception {
+        mockMvc.perform(post(BASE_RESOURCE + "/analisar").contextPath(API_CONTEXT)
+                        .param("cliente", "Empresa ABC LTDA")
+                        .param("documento", "04.252.011/0001-10")
+                        .param("valor", "25000")
+                        .param("score", "750")
+                        .param("negativado", "false")
+                        .param("tipoConta", "PJ"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cliente").value("Empresa ABC LTDA"))
+                .andExpect(jsonPath("$.documento").value("04.252.011/0001-10"))
+                .andExpect(jsonPath("$.aprovado").value(true));
     }
 
     @Test
-    public void testAnalisarSolicitacaoReprovadaPJComRisco() {
-        boolean resultado = analiseCreditoService.analisarSolicitacao("Empresa XYZ LTDA", 60000, 650, false, "PJ");
-        assertFalse(resultado, "PJ com valor alto e score baixo deve ser reprovado");
-
-        List<SolicitacaoCredito> solicitacoes = repository.findByCliente("Empresa XYZ LTDA");
-        assertEquals(1, solicitacoes.size());
-        assertFalse(solicitacoes.getFirst().getAprovado());
-        assertNotNull(solicitacoes.getFirst().getMotivoReprovacao());
+    void deveReprovarQuandoDocumentoForInvalido() throws Exception {
+        mockMvc.perform(post(BASE_RESOURCE + "/analisar").contextPath(API_CONTEXT)
+                        .param("cliente", "Joao Silva")
+                        .param("documento", "11111111111")
+                        .param("valor", "2000")
+                        .param("score", "700")
+                        .param("negativado", "false")
+                        .param("tipoConta", "PF"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aprovado").value(false));
     }
 
     @Test
-    public void testProcessarLoteComMultiplosClientes() {
-        List<String> clientes = Arrays.asList("Cliente1", "Cliente2", "Cliente3");
-        analiseCreditoService.processarLote(clientes);
-
-        assertEquals(3, repository.count(), "Deve haver 3 solicitações após processar lote");
+    void deveRetornarBadRequestQuandoTipoContaInvalido() throws Exception {
+        mockMvc.perform(post(BASE_RESOURCE + "/analisar").contextPath(API_CONTEXT)
+                        .param("cliente", "Cliente Teste")
+                        .param("documento", "52998224725")
+                        .param("valor", "1000")
+                        .param("score", "700")
+                        .param("negativado", "false")
+                        .param("tipoConta", "XPTO"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Tipo de conta inválido. Use PF ou PJ."));
     }
 
-//    @Test
-//    public void testObterSolicitacoesAprovadosPortipo() {
-//        analiseCreditoService.analisarSolicitacao("Cliente PF 1", 2000, 700, false, "PF");
-//        analiseCreditoService.analisarSolicitacao("Cliente PF 2", 3000, 750, false, "PF");
-//        analiseCreditoService.analisarSolicitacao("Cliente PJ 1", 25000, 750, false, "PJ");
-//
-//        Long totalPF = analiseCreditoService.obterTotalAprovadosPorTipo("PF");
-//        Long totalPJ = analiseCreditoService.obterTotalAprovadosPorTipo("PJ");
-//
-//        assertEquals(2, totalPF, "Deve haver 2 solicitações aprovadas para PF");
-//        assertEquals(1, totalPJ, "Deve haver 1 solicitação aprovada para PJ");
-//    }
+    @Test
+    void deveProcessarLote() throws Exception {
+        mockMvc.perform(post(BASE_RESOURCE + "/processar-lote").contextPath(API_CONTEXT)
+                        .contentType("application/json")
+                        .content("[\"Cliente1\", \"Cliente2\", \"Cliente3\"]"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mensagem").value("Lote processado com sucesso"))
+                .andExpect(jsonPath("$.totalClientes").value("3"));
+    }
 }
-

@@ -3,16 +3,14 @@ package br.com.nogueiranogueira.aularefatoracao.controller;
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
 import br.com.nogueiranogueira.aularefatoracao.dto.TipoConta;
-import br.com.nogueiranogueira.aularefatoracao.model.SolicitacaoCredito;
 import br.com.nogueiranogueira.aularefatoracao.service.AnaliseCreditoService;
 import br.com.nogueiranogueira.aularefatoracao.service.ProcessadorAnaliseCreditoService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,12 +20,20 @@ import java.util.stream.Collectors;
 @Tag(name = "Solictações Controller", description = "Endpoints para análise e gerenciamento de solicitações de crédito")
 @RestController
 @RequestMapping("/solicitacoes")
-@RequiredArgsConstructor
-@Slf4j
 public class SolicitacaoCreditoController {
+
+    private static final Logger log = LoggerFactory.getLogger(SolicitacaoCreditoController.class);
 
     private final AnaliseCreditoService analiseCreditoService;
     private final ProcessadorAnaliseCreditoService processadorAnaliseCreditoService;
+
+    public SolicitacaoCreditoController(
+            AnaliseCreditoService analiseCreditoService,
+            ProcessadorAnaliseCreditoService processadorAnaliseCreditoService
+    ) {
+        this.analiseCreditoService = analiseCreditoService;
+        this.processadorAnaliseCreditoService = processadorAnaliseCreditoService;
+    }
 
     @Operation(
             summary = "Analisar solicitação de crédito",
@@ -36,6 +42,7 @@ public class SolicitacaoCreditoController {
     @PostMapping("/analisar")
     public ResponseEntity<Map<String, Object>> analisarSolicitacao(
             @RequestParam String cliente,
+            @RequestParam String documento,
             @RequestParam Double valor,
             @RequestParam Integer score,
             @RequestParam(defaultValue = "false") Boolean negativado,
@@ -48,12 +55,13 @@ public class SolicitacaoCreditoController {
             TipoConta tipo = TipoConta.valueOf(tipoConta.toUpperCase());
 
             SolicitacaoAnalise solicitacao =
-                    new SolicitacaoAnalise(cliente, valor, score, negativado, tipo);
+                    new SolicitacaoAnalise(cliente, documento, valor, score, negativado, tipo);
 
             boolean aprovado = analiseCreditoService.analisarSolicitacao(solicitacao);
 
             Map<String, Object> response = new HashMap<>();
             response.put("cliente", cliente);
+            response.put("documento", documento);
             response.put("valor", valor);
             response.put("score", score);
             response.put("aprovado", aprovado);
@@ -90,7 +98,7 @@ public class SolicitacaoCreditoController {
         try {
 
             List<SolicitacaoAnalise> lote = clientes.stream()
-                    .map(c -> new SolicitacaoAnalise(c, 1000.0, 600, false, TipoConta.PF))
+                    .map(c -> new SolicitacaoAnalise(c, "52998224725", 1000.0, 600, false, TipoConta.PF))
                     .collect(Collectors.toList());
 
             analiseCreditoService.processarLote(lote);

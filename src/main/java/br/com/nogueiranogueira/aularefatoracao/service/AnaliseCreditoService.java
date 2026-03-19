@@ -4,9 +4,9 @@ import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
 import br.com.nogueiranogueira.aularefatoracao.adapter.ServicoAnaliseRisco;
 import br.com.nogueiranogueira.aularefatoracao.strategy.SolicitacaoStrategy;
-import br.com.nogueiranogueira.aularefatoracao.validation.ValidadorDocumentoFactory;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import br.com.nogueiranogueira.aularefatoracao.strategy.ValidadorDocumentoFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -14,14 +14,24 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class AnaliseCreditoService {
+
+    private static final Logger log = LoggerFactory.getLogger(AnaliseCreditoService.class);
 
     private final List<SolicitacaoStrategy> strategies;
     private final ValidadorDocumentoFactory validadorDocumentoFactory;
     private final ServicoAnaliseRisco servicoAnaliseRisco;
+
+    public AnaliseCreditoService(
+            List<SolicitacaoStrategy> strategies,
+            ValidadorDocumentoFactory validadorDocumentoFactory,
+            ServicoAnaliseRisco servicoAnaliseRisco
+    ) {
+        this.strategies = strategies;
+        this.validadorDocumentoFactory = validadorDocumentoFactory;
+        this.servicoAnaliseRisco = servicoAnaliseRisco;
+    }
 
     public boolean analisarSolicitacao(SolicitacaoAnalise solicitacao) {
         log.info("Iniciando análise para: {}", solicitacao.cliente());
@@ -88,8 +98,5 @@ public class AnaliseCreditoService {
             }
 
         }
-    }
-
-    public void analisarSolicitacao(String clienteAprovado, int i, int i1, boolean b, String pf) {
     }
 }
