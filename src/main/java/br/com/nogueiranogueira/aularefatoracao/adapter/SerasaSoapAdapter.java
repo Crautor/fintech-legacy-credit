@@ -1,16 +1,18 @@
 package br.com.nogueiranogueira.aularefatoracao.adapter;
 
-import br.com.nogueiranogueira.aularefatoracao.model.SolicitacaoCredito;
+import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
-public class SerasaSoapAdapter implements ServicoAnaliseRiscoExterno {
+@Primary
+@Component
+public class SerasaSoapAdapter extends AnaliseRiscoTemplate {
 
     private static final String SERASA_QA_ENDPOINT = "https://qa.serasa.com.br/ws/ConsultaCredito";
 
     @Override
-    public boolean avaliarRisco(SolicitacaoCredito solicitacao) {
-        System.out.println("[Adapter] Iniciando tradução do domínio para SOAP/XML...");
-
-        String soapPayload = """
+    protected String montarRequisicao(SolicitacaoCreditoRecord solicitacao) {
+        return """
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ser="http://serasa.com.br/ws">
                 <soapenv:Header/>
                 <soapenv:Body>
@@ -22,29 +24,16 @@ public class SerasaSoapAdapter implements ServicoAnaliseRiscoExterno {
                 </soapenv:Body>
             </soapenv:Envelope>
         """.formatted(
-                solicitacao.getCliente(),
-                solicitacao.getValor().toString(),
-                solicitacao.getScore()
+                solicitacao.documento(),
+                solicitacao.valor().toString(),
+                solicitacao.score()
         );
-
-        try {
-            // 2. SIMULAÇÃO DA CHAMADA (didático)
-            System.out.println("[Adapter] Simulando envio para API SOAP...");
-            System.out.println("Payload enviado:\n" + soapPayload);
-
-            String xmlRespostaLegada = simularRespostaDaApiExterna();
-
-            // 3. TRADUÇÃO DE VOLTA (XML -> domínio)
-            System.out.println("[Adapter] Traduzindo resposta XML para domínio...");
-            return analisarXmlResposta(xmlRespostaLegada);
-
-        } catch (Exception e) {
-            System.err.println("Erro na integração com o sistema legado: " + e.getMessage());
-            return false;
-        }
     }
 
-    private String simularRespostaDaApiExterna() {
+    @Override
+    protected String enviarRequisicao(String payload) {
+        System.out.println("[Adapter] Simulando envio para API SOAP...");
+        System.out.println("Payload enviado:\n" + payload);
         return """
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
                 <soapenv:Body>
@@ -58,7 +47,9 @@ public class SerasaSoapAdapter implements ServicoAnaliseRiscoExterno {
         """;
     }
 
-    private boolean analisarXmlResposta(String xml) {
-        return xml.contains("<statusConsulta>APROVADO");
+    @Override
+    protected boolean processarResposta(String resposta) {
+        System.out.println("[Adapter] Traduzindo resposta XML para domínio...");
+        return resposta.contains("<statusConsulta>APROVADO");
     }
 }

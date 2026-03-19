@@ -1,11 +1,15 @@
 package br.com.nogueiranogueira.aularefatoracao.service;
 
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
+import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
+import br.com.nogueiranogueira.aularefatoracao.adapter.ServicoAnaliseRisco;
 import br.com.nogueiranogueira.aularefatoracao.strategy.SolicitacaoStrategy;
+import br.com.nogueiranogueira.aularefatoracao.validation.ValidadorDocumentoFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,13 +19,22 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 public class AnaliseCreditoService {
 
-    // O Spring injeta automaticamente o AnalisePF e AnalisePJ aqui
     private final List<SolicitacaoStrategy> strategies;
+    private final ValidadorDocumentoFactory validadorDocumentoFactory;
+    private final ServicoAnaliseRisco servicoAnaliseRisco;
 
     public boolean analisarSolicitacao(SolicitacaoAnalise solicitacao) {
         log.info("Iniciando análise para: {}", solicitacao.cliente());
 
-        // Fail-Fast: Validações iniciais (Regras aplicáveis a ambos)
+        boolean documentoValido = validadorDocumentoFactory
+                .obterValidador(solicitacao.tipoConta())
+                .validar(solicitacao.documento());
+                
+        if (!documentoValido) {
+            log.warn("Documento inválido. Solicitação reprovada.");
+            return false;
+        }
+
         if (solicitacao.valor() <= 0) {
             log.warn("Valor inválido para a solicitação.");
             return false;
@@ -37,14 +50,26 @@ public class AnaliseCreditoService {
 
         try {
             log.info("Consultando Bureau de Crédito Externo...");
-            Thread.sleep(2000); // Simula delay do serviço externo
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            
+            SolicitacaoCreditoRecord solicitacaoRecord = new SolicitacaoCreditoRecord(
+                    solicitacao.cliente(),
+                    solicitacao.documento(),
+                    BigDecimal.valueOf(solicitacao.valor()),
+                    solicitacao.score(),
+                    solicitacao.negativado(),
+                    solicitacao.tipoConta()
+            );
+            
+            boolean aprovadoExternamente = servicoAnaliseRisco.avaliarCredito(solicitacaoRecord);
+            if (!aprovadoExternamente) {
+                log.warn("Reprovado na análise de risco externa (Adapter).");
+                return false;
+            }
+        } catch (Exception e) {
             log.error("Erro na comunicação com o Bureau de Crédito", e);
             return false;
         }
 
-        // Executa a estratégia compatível
         return strategies.stream()
                 .filter(strategy -> strategy.Elegivel(solicitacao))
                 .findFirst()

@@ -6,15 +6,14 @@ public class RelatorioPDF extends GeradorRelatorioTemplate {
 
     @Override
     protected String formatarCabecalho() {
-        return "=== RELATÓRIO DE ANÁLISE DE CRÉDITO (PDF) ===\n\n";
+        return "=== RELATÓRIO DE CRÉDITO (PDF) ===\nDOCUMENTO | VALOR | STATUS\n";
     }
 
     @Override
     protected String formatarCorpo(List<String> dados) {
         StringBuilder corpo = new StringBuilder();
-        // Formata os dados de uma forma mais visual para leitura em PDF
         for (String dado : dados) {
-            corpo.append("-> Registo: ").append(dado).append("\n");
+            corpo.append(dado.replace(" - ", " | ")).append("\n");
         }
         return corpo.toString();
     }
