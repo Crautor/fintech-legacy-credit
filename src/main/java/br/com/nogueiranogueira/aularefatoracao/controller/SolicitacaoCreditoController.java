@@ -64,7 +64,7 @@ public class SolicitacaoCreditoController {
             response.put("documento", documento);
             response.put("valor", valor);
             response.put("score", score);
-            response.put("aprovado", aprovado);
+            response.put("aprovado", Optional.of(aprovado));
             response.put("mensagem", aprovado ? "Solicitação aprovada" : "Solicitação reprovada");
 
             return ResponseEntity.ok(response);
@@ -93,7 +93,7 @@ public class SolicitacaoCreditoController {
     @PostMapping("/processar-lote")
     public ResponseEntity<Map<String, String>> processarLote(@RequestBody List<String> clientes) {
 
-        log.info("Recebida requisição para processar lote com {} clientes", clientes.size());
+        log.info("Recebida requisição para processar lote com {} clientes", Optional.of(Optional.of(clientes.size())));
 
         try {
 
