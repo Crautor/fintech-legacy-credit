@@ -6,6 +6,7 @@ public record SolicitacaoAnalise(
         double valor,
         int score,
         boolean negativado,
-        TipoConta tipoConta
+        TipoConta tipoConta,
+        Pais pais
 ) {
 }

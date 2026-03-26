@@ -1,10 +1,12 @@
 package br.com.nogueiranogueira.aularefatoracao.controller;
 
+import br.com.nogueiranogueira.aularefatoracao.dto.Pais;
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
 import br.com.nogueiranogueira.aularefatoracao.dto.TipoConta;
 import br.com.nogueiranogueira.aularefatoracao.service.AnaliseCreditoService;
 import br.com.nogueiranogueira.aularefatoracao.service.ProcessadorAnaliseCreditoService;
+import br.com.nogueiranogueira.aularefatoracao.service.core.ProcessadorCreditoCore;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,13 +28,16 @@ public class SolicitacaoCreditoController {
 
     private final AnaliseCreditoService analiseCreditoService;
     private final ProcessadorAnaliseCreditoService processadorAnaliseCreditoService;
+    private final ProcessadorCreditoCore processadorCreditoCore;
 
     public SolicitacaoCreditoController(
             AnaliseCreditoService analiseCreditoService,
-            ProcessadorAnaliseCreditoService processadorAnaliseCreditoService
+            ProcessadorAnaliseCreditoService processadorAnaliseCreditoService,
+            ProcessadorCreditoCore processadorCreditoCore
     ) {
         this.analiseCreditoService = analiseCreditoService;
         this.processadorAnaliseCreditoService = processadorAnaliseCreditoService;
+        this.processadorCreditoCore = processadorCreditoCore;
     }
 
     @Operation(
@@ -46,18 +51,20 @@ public class SolicitacaoCreditoController {
             @RequestParam Double valor,
             @RequestParam Integer score,
             @RequestParam(defaultValue = "false") Boolean negativado,
-            @RequestParam(defaultValue = "PF") String tipoConta) {
+            @RequestParam(defaultValue = "PF") String tipoConta,
+            @RequestParam(defaultValue = "BR") String pais) {
 
         log.info("Recebida requisição de análise para cliente: {}", cliente);
 
         try {
 
             TipoConta tipo = TipoConta.valueOf(tipoConta.toUpperCase());
+            Pais paisEnum = Pais.valueOf(pais.toUpperCase());
 
             SolicitacaoAnalise solicitacao =
-                    new SolicitacaoAnalise(cliente, documento, valor, score, negativado, tipo);
+                    new SolicitacaoAnalise(cliente, documento, valor, score, negativado, tipo, paisEnum);
 
-            boolean aprovado = analiseCreditoService.analisarSolicitacao(solicitacao);
+            boolean aprovado = processadorCreditoCore.processar(solicitacao);
 
             Map<String, Object> response = new HashMap<>();
             response.put("cliente", cliente);
@@ -74,7 +81,7 @@ public class SolicitacaoCreditoController {
             log.error("Tipo de conta inválido", e);
 
             Map<String, Object> error = new HashMap<>();
-            error.put("erro", "Tipo de conta inválido. Use PF ou PJ.");
+            error.put("erro", "Parâmetro inválido. Verifique os valores de 'tipoConta' ou 'pais'.");
 
             return ResponseEntity.badRequest().body(error);
 
@@ -98,7 +105,7 @@ public class SolicitacaoCreditoController {
         try {
 
             List<SolicitacaoAnalise> lote = clientes.stream()
-                    .map(c -> new SolicitacaoAnalise(c, "52998224725", 1000.0, 600, false, TipoConta.PF))
+                    .map(c -> new SolicitacaoAnalise(c, "52998224725", 1000.0, 600, false, TipoConta.PF, Pais.BR))
                     .collect(Collectors.toList());
 
             analiseCreditoService.processarLote(lote);
