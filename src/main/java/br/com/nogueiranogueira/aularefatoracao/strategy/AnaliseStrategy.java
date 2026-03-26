@@ -5,6 +5,5 @@ import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
 public interface AnaliseStrategy {
 
     boolean analisar(SolicitacaoCreditoRecord solicitacao);
-    boolean elegivel(SolicitacaoCreditoRecord solicitacao);
 
 }

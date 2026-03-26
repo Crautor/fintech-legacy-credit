@@ -56,8 +56,4 @@ public class CreditoBrasilStrategy implements CreditoStrategy {
         return true;
     }
 
-    @Override
-    public String getPais() {
-        return Pais.BR.name();
-    }
 }

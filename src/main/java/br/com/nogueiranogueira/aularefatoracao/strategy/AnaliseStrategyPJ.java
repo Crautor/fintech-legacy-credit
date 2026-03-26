@@ -19,7 +19,6 @@ public class AnaliseStrategyPJ implements AnaliseStrategy {
         return true;
     }
 
-    @Override
     public boolean elegivel(SolicitacaoCreditoRecord solicitacao) {
         return solicitacao.tipo().equals(TipoConta.PJ);
     }

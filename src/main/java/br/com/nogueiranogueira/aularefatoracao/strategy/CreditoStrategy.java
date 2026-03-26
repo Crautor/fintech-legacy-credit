@@ -7,5 +7,5 @@ public interface CreditoStrategy {
      * Executa a análise de crédito específica da estratégia.
      */
     boolean analisar(SolicitacaoAnalise solicitacao);
-    String getPais();
+
 }
