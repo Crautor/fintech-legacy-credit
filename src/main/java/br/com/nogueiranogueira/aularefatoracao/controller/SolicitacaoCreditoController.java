@@ -6,7 +6,7 @@ import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
 import br.com.nogueiranogueira.aularefatoracao.dto.TipoConta;
 import br.com.nogueiranogueira.aularefatoracao.service.AnaliseCreditoService;
 import br.com.nogueiranogueira.aularefatoracao.service.ProcessadorAnaliseCreditoService;
-import br.com.nogueiranogueira.aularefatoracao.service.core.ProcessadorCreditoCore;
+import br.com.nogueiranogueira.aularefatoracao.strategy.ProcessadorCreditoCore;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

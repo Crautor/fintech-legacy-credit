@@ -1,9 +1,10 @@
-package br.com.nogueiranogueira.aularefatoracao.service.core;
+package br.com.nogueiranogueira.aularefatoracao.strategy;
 
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import br.com.nogueiranogueira.aularefatoracao.strategy.CreditoStrategyFactory;
 
 @Service
 public class ProcessadorCreditoCore {
