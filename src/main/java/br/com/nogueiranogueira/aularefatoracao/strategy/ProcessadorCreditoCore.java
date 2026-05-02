@@ -1,10 +1,12 @@
 package br.com.nogueiranogueira.aularefatoracao.strategy;
 
 import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
+import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoCreditoRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import br.com.nogueiranogueira.aularefatoracao.strategy.CreditoStrategyFactory;
+
+import java.math.BigDecimal;
 
 @Service
 public class ProcessadorCreditoCore {
@@ -18,8 +20,18 @@ public class ProcessadorCreditoCore {
     public boolean processar(SolicitacaoAnalise solicitacao) {
         log.info("Iniciando processamento de crédito para o cliente {} no país {}", solicitacao.cliente(), solicitacao.pais());
 
+        // Converte SolicitacaoAnalise para SolicitacaoCreditoRecord
+        SolicitacaoCreditoRecord creditoRecord = new SolicitacaoCreditoRecord(
+                solicitacao.cliente(),
+                solicitacao.documento(),
+                BigDecimal.valueOf(solicitacao.valor()),
+                solicitacao.score(),
+                solicitacao.negativado(),
+                solicitacao.tipoConta()
+        );
+
         return factory.getStrategy(solicitacao.pais())
-                .map(strategy -> strategy.analisar(solicitacao))
+                .map(strategy -> strategy.analisar(creditoRecord))
                 .orElseThrow(() -> {
                     log.error("Nenhuma estratégia de análise de crédito encontrada para o país: {}", solicitacao.pais());
                     return new IllegalArgumentException("País não suportado para análise de crédito: " + solicitacao.pais());

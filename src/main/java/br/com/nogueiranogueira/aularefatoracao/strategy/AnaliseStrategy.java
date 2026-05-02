@@ -6,4 +6,8 @@ public interface AnaliseStrategy {
 
     boolean analisar(SolicitacaoCreditoRecord solicitacao);
 
+    default boolean elegivel(SolicitacaoCreditoRecord solicitacao) {
+        return true;
+    }
+
 }
