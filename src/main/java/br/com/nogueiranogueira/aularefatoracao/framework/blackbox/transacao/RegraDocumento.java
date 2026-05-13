@@ -2,33 +2,43 @@ package br.com.nogueiranogueira.aularefatoracao.framework.blackbox.transacao;
 
 import br.com.nogueiranogueira.aularefatoracao.framework.model.ResultadoValidacao;
 import br.com.nogueiranogueira.aularefatoracao.framework.model.Transacao;
+import com.validador.core.domain.Cnpj;
+import com.validador.core.domain.Cpf;
+import com.validador.core.domain.Documento;
+import com.validador.core.service.ValidadorDocumentoService;
 
 /**
  * CÓDIGO-CLIENTE — Regra Black-box: Validação de Documento.
  *
  * <p>IMPLEMENTA a interface {@code RegraValidacao} (implements, não extends).</p>
- * <p>Valida se o documento tem o tamanho correto para o tipo (PF=11, PJ=14).</p>
+ * <p>Delega a validação ao {@link ValidadorDocumentoService} do validator-core (Repo 1),
+ * demonstrando a integração entre os dois repositórios.</p>
  */
 public class RegraDocumento implements RegraValidacao {
 
+    private final ValidadorDocumentoService validadorService = new ValidadorDocumentoService();
+
     @Override
     public ResultadoValidacao validar(Transacao transacao) {
-        String doc = transacao.documento().replaceAll("[^0-9]", "");
+        try {
+            Documento documento = switch (transacao.tipo()) {
+                case "PF" -> new Cpf(transacao.documento());
+                case "PJ" -> new Cnpj(transacao.documento());
+                default -> throw new IllegalArgumentException("Tipo desconhecido: " + transacao.tipo());
+            };
 
-        boolean valido = switch (transacao.tipo()) {
-            case "PF" -> doc.length() == 11;
-            case "PJ" -> doc.length() == 14;
-            default -> false;
-        };
+            com.validador.core.service.ResultadoValidacao resultadoCore = validadorService.validar(documento);
 
-        return valido
-                ? ResultadoValidacao.sucesso()
-                : ResultadoValidacao.falha("Documento inválido para tipo " + transacao.tipo()
-                    + " (esperado " + (transacao.tipo().equals("PF") ? "11" : "14") + " dígitos)");
+            return resultadoCore.valido()
+                    ? ResultadoValidacao.sucesso()
+                    : ResultadoValidacao.falha(resultadoCore.mensagem());
+        } catch (IllegalArgumentException e) {
+            return ResultadoValidacao.falha("Documento inválido: " + e.getMessage());
+        }
     }
 
     @Override
     public String descricao() {
-        return "Validação de Documento (CPF/CNPJ)";
+        return "Validação de Documento via validator-core (CPF/CNPJ)";
     }
 }

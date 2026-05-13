@@ -1,6 +1,8 @@
 package br.com.nogueiranogueira.aularefatoracao.framework.whitebox.transacao;
 
 import br.com.nogueiranogueira.aularefatoracao.framework.model.Transacao;
+import com.validador.core.domain.Cnpj;
+import com.validador.core.service.ValidadorDocumentoService;
 
 import java.math.BigDecimal;
 
@@ -12,7 +14,7 @@ import java.math.BigDecimal;
  *
  * <p><b>Regras de negócio PJ:</b></p>
  * <ul>
- *   <li>Documento deve ter 14 dígitos (CNPJ)</li>
+ *   <li>Documento validado via {@link ValidadorDocumentoService} do validator-core</li>
  *   <li>Valor máximo: R$ 500.000,00</li>
  *   <li>Score mínimo: 500</li>
  * </ul>
@@ -22,11 +24,16 @@ public class ValidadorTransacaoPJ extends TransacaoValidadorTemplate {
     private static final BigDecimal LIMITE_PJ = new BigDecimal("500000.00");
     private static final int SCORE_MINIMO_PJ = 500;
 
+    private final ValidadorDocumentoService validadorService = new ValidadorDocumentoService();
+
     @Override
     protected boolean validarDocumento(Transacao transacao) {
-        // CNPJ deve conter exatamente 14 dígitos numéricos
-        String doc = transacao.documento().replaceAll("[^0-9]", "");
-        return doc.length() == 14;
+        try {
+            Cnpj cnpj = new Cnpj(transacao.documento());
+            return validadorService.validar(cnpj).valido();
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     @Override
