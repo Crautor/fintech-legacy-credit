@@ -71,22 +71,24 @@ POST http://localhost:8080/api/solicitacoes/analisar
 
 **Parâmetros:**
 - `cliente` (String): Nome do cliente
+- `documento` (String): CPF (PF) ou CNPJ (PJ)
 - `valor` (Double): Valor solicitado
 - `score` (Integer): Score de crédito (0-1000)
 - `negativado` (Boolean, opcional): Cliente negativado? (padrão: false)
 - `tipoConta` (String, opcional): PF ou PJ (padrão: PF)
+- `pais` (String, opcional): BR, US ou MX (padrão: BR)
 
 **Exemplo:**
 ```bash
-curl -X POST "http://localhost:8080/api/solicitacoes/analisar?cliente=João%20Silva&valor=5000&score=750&negativado=false&tipoConta=PF"
+curl -X POST "http://localhost:8080/api/solicitacoes/analisar?cliente=Jose%20Silva&documento=123.456.789-09&valor=5000&score=750&negativado=false&tipoConta=PF"
 ```
 
 **Resposta:**
 ```json
 {
-  "cliente": "João Silva",
+  "cliente": "Jose Silva",
+  "documento": "123.456.789-09",
   "valor": 5000.0,
-  "score": 750,
   "aprovado": true,
   "mensagem": "Solicitação aprovada"
 }
@@ -96,8 +98,13 @@ curl -X POST "http://localhost:8080/api/solicitacoes/analisar?cliente=João%20Si
 ```http
 POST http://localhost:8080/api/solicitacoes/processar-lote
 Content-Type: application/json
+```
 
-["Cliente1", "Cliente2", "Cliente3"]
+**Exemplo:**
+```bash
+curl -X POST "http://localhost:8080/api/solicitacoes/processar-lote" \
+  -H "Content-Type: application/json" \
+  -d '["Cliente1", "Cliente2", "Cliente3"]'
 ```
 
 **Resposta:**
@@ -108,44 +115,14 @@ Content-Type: application/json
 }
 ```
 
-### 3. Obter Solicitações por Cliente
-```http
-GET http://localhost:8080/api/solicitacoes/por-cliente/{cliente}
-```
-
-**Exemplo:**
-```bash
-curl "http://localhost:8080/api/solicitacoes/por-cliente/João%20Silva"
-```
-
-### 4. Obter Solicitações Aprovadas
-```http
-GET http://localhost:8080/api/solicitacoes/aprovadas
-```
-
-### 5. Obter Solicitações Reprovadas
-```http
-GET http://localhost:8080/api/solicitacoes/reprovadas
-```
-
-### 6. Obter Total de Aprovados por Tipo
-```http
-GET http://localhost:8080/api/solicitacoes/total-aprovados/{tipoConta}
-```
-
-**Exemplo:**
-```bash
-curl "http://localhost:8080/api/solicitacoes/total-aprovados/PF"
-```
-
-### 7. Obter Solicitações por Período
-```http
-GET http://localhost:8080/api/solicitacoes/por-periodo?inicio=2024-01-01T00:00:00&fim=2024-12-31T23:59:59
-```
-
-### 8. Health Check
+### 3. Health Check
 ```http
 GET http://localhost:8080/api/solicitacoes/saude
+```
+
+**Exemplo:**
+```bash
+curl "http://localhost:8080/api/solicitacoes/saude"
 ```
 
 **Resposta:**
