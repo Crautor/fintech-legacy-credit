@@ -7,7 +7,7 @@ Este guia descreve o processo de importação do módulo `validator-core` e a pr
 ### 1. Importação do Módulo Core
 Para que o projeto principal reconheça o validador, é necessário importá-lo como um módulo:
 
-1. Aceda a **File** > **Project Structure** (ou pressione `Ctrl+Alt+Shift+S`).
+1. Acesse a **File** > **Project Structure** (ou pressione `Ctrl+Alt+Shift+S`).
 2. No menu lateral esquerdo, selecione **Modules**.
 3. Clique no ícone de soma (**+**) e escolha **Import Module**.
 4. Selecione a pasta do projeto **validator-core** e siga as instruções para confirmar a importação.
