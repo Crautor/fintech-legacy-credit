@@ -1,4 +1,26 @@
-# Análise de Qualidade — SonarQube
+# Análise de Qualidade — SonarQube e MetricsTree
+
+## 7.1 Tabela Comparativa CBO e LCOM
+
+> Métricas calculadas via análise estática do código-fonte.
+> **CBO** (Coupling Between Objects): acoplamento — ideal ≤ 5. Acima de 10 indica acoplamento excessivo.
+> **LCOM** (Lack of Cohesion in Methods): coesão — ideal = 0. Acima de 1 indica baixa coesão.
+
+| Classe | CBO v1 | CBO v2 | LCOM v1 | LCOM v2 | Observação |
+|---|---|---|---|---|---|
+| AnaliseCreditoService | 0 | 7 | 0 | 1 | Ganhou dependências via injeção (DI), mas processarLote não acessa campos diretamente |
+| SolicitacaoCreditoController | 2 | 11 | 1 | 2 | Cresceu de 1 para 3 dependências; métodos usam subconjuntos diferentes dos serviços |
+| ProcessadorVendaService | 0 | 1 | 0 | 0 | Pequena melhora: extraiu CalculadoraImposto |
+| SolicitacaoCredito | 0 | 0 | 0 | 0 | Entidade de dados estável |
+| SolicitacaoCreditoRepository | 1 | 1 | 0 | 0 | Interface JPA — sem alteração |
+
+### Interpretação
+
+- **AnaliseCreditoService**: o CBO subiu de 0 → 7 porque a classe original era uma *God Method* sem dependências injetadas. A refatoração introduziu DI correta, o que é positivo mesmo aumentando o CBO.
+- **SolicitacaoCreditoController**: CBO 2 → 11 reflete o crescimento do domínio (novos serviços, DTOs, Swagger). O LCOM 1 → 2 indica que alguns métodos usam apenas parte dos três serviços injetados — candidato a divisão futura.
+- **ProcessadorVendaService / SolicitacaoCredito / Repository**: estáveis, sem regressão.
+
+---
 
 ## Comparativo: Primeiro Commit vs. Último Commit
 
